@@ -5,3 +5,5 @@ pandas>=2.1.0
 transformers
 accelerate
 matplotlib
+huggingface_hub
+huggingface_hub[cli]
