@@ -1,38 +1,39 @@
 import os
-# Force Hugging Face to use the persistent vault BEFORE importing anything else
-os.environ["HF_HOME"] = "/workspace/huggingface_cache"
-
+import argparse
 import torch
 import time
 import csv
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-# --- Configuration ---
-MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
+# Force Hugging Face to use the persistent vault
+os.environ["HF_HOME"] = "/workspace/huggingface_cache"
+
+# --- Static Configuration ---
 BATCH_SIZES = [1, 2, 4, 8, 16, 32, 64, 128]
-INPUT_LENGTH = 128  # Number of prompt tokens
-OUTPUT_LENGTH = 50  # Number of tokens to generate
+INPUT_LENGTH = 128
+OUTPUT_LENGTH = 50
 WARMUP_RUNS = 2
 MEASUREMENT_RUNS = 3
-RESULTS_FILE = "results/01_batching_cliff/batching_metrics_llama3_1_8b.csv"
 
 def main():
-    print(f"🚀 Loading {MODEL_ID} into VRAM...")
+    parser = argparse.ArgumentParser(description="Run LLM Batching Benchmark")
+    parser.add_argument("--model_id", type=str, required=True, help="Hugging Face Model ID (e.g., TinyLlama/TinyLlama-1.1B-Chat-v1.0)")
+    parser.add_argument("--output_csv", type=str, required=True, help="Path to save the CSV results")
+    args = parser.parse_args()
+
+    print(f"🚀 Loading {args.model_id} into VRAM...")
     
-    # Load model in bfloat16 to maximize RTX 4090 Tensor Core efficiency
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_id)
     tokenizer.pad_token = tokenizer.eos_token
     
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID,
+        args.model_id,
         dtype=torch.bfloat16,
         device_map="cuda"
     )
     model.eval()
     
-    # Ensure results directory exists
-    os.makedirs(os.path.dirname(RESULTS_FILE), exist_ok=True)
-    
+    os.makedirs(os.path.dirname(args.output_csv), exist_ok=True)
     results = []
 
     print("\n📊 Starting Batching Benchmark...")
@@ -48,7 +49,6 @@ def main():
 
     with torch.no_grad():
         for batch_size in BATCH_SIZES:
-            # Expand the single input into the desired batch size
             batch_input_ids = input_ids.expand(batch_size, -1)
             batch_attention_mask = attention_mask.expand(batch_size, -1)
             
@@ -64,7 +64,7 @@ def main():
                 )
             
             # --- MEASUREMENT ---
-            torch.cuda.synchronize() # Wait for all warmups to finish
+            torch.cuda.synchronize() # Wait for all measurements to finish
             start_time = time.perf_counter()
             
             for _ in range(MEASUREMENT_RUNS):
@@ -73,8 +73,7 @@ def main():
                     attention_mask=batch_attention_mask,
                     max_new_tokens=OUTPUT_LENGTH,
                     min_new_tokens=OUTPUT_LENGTH,
-                    use_cache=True,
-                    pad_token_id=tokenizer.eos_token_id
+                    use_cache=True, pad_token_id=tokenizer.eos_token_id
                 )
             
             torch.cuda.synchronize() # Wait for all measurements to finish
@@ -91,20 +90,15 @@ def main():
             
             print(f"{batch_size:<12} | {avg_time_per_run_ms:<15.2f} | {throughput_tok_per_sec:<20.2f}")
             
-            results.append({
-                "batch_size": batch_size,
-                "latency_ms": round(avg_time_per_run_ms, 2),
-                "throughput_tok_sec": round(throughput_tok_per_sec, 2)
-            })
+            results.append({"batch_size": batch_size, "latency_ms": round(avg_time_per_run_ms, 2), "throughput_tok_sec": round(throughput_tok_per_sec, 2)})
 
-    # Save to CSV for the plotting script later
-    with open(RESULTS_FILE, mode='w', newline='') as file:
+    with open(args.output_csv, mode='w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=["batch_size", "latency_ms", "throughput_tok_sec"])
         writer.writeheader()
         writer.writerows(results)
         
     print("-" * 60)
-    print(f"✅ Benchmark complete. Data saved to {RESULTS_FILE}")
+    print(f"✅ Benchmark complete. Data saved to {args.output_csv}")
 
 if __name__ == "__main__":
     main()
