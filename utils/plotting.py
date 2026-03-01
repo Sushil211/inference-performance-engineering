@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import os
 
 # --- Configuration ---
-CSV_FILE = "results/01_batching_cliff/batching_metrics.csv"
-OUTPUT_IMAGE = "results/01_batching_cliff/batching_cliff.png"
+CSV_FILE = "results/01_batching_cliff/batching_metrics_llama3_1_8b.csv"
+OUTPUT_IMAGE = "results/01_batching_cliff/batching_cliff_llama3_1_8b.png"
 
 def generate_dual_axis_plot(csv_path, output_path):
     print(f"📊 Reading data from {csv_path}...")
@@ -52,7 +52,7 @@ def generate_dual_axis_plot(csv_path, output_path):
     labels = [l.get_label() for l in lines]
     ax1.legend(lines, labels, loc='upper left')
 
-    plt.title('The Batching Cliff: RTX 4090 vs TinyLlama-1.1B', fontsize=14, fontweight='bold')
+    plt.title('The Batching Cliff: RTX 4090 vs Llama-3.1-8B-Instruct', fontsize=14, fontweight='bold')
     fig.tight_layout()  # Ensure labels don't get cut off
 
     # Save the file

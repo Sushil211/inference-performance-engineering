@@ -1,17 +1,20 @@
+import os
+# Force Hugging Face to use the persistent vault BEFORE importing anything else
+os.environ["HF_HOME"] = "/workspace/huggingface_cache"
+
 import torch
 import time
 import csv
-import os
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # --- Configuration ---
-MODEL_ID = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
 BATCH_SIZES = [1, 2, 4, 8, 16, 32, 64, 128]
 INPUT_LENGTH = 128  # Number of prompt tokens
 OUTPUT_LENGTH = 50  # Number of tokens to generate
 WARMUP_RUNS = 2
 MEASUREMENT_RUNS = 3
-RESULTS_FILE = "results/01_batching_cliff/batching_metrics.csv"
+RESULTS_FILE = "results/01_batching_cliff/batching_metrics_llama3_1_8b.csv"
 
 def main():
     print(f"🚀 Loading {MODEL_ID} into VRAM...")
