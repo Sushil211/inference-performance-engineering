@@ -8,3 +8,5 @@ __pycache__/
 
 # Mac System Files
 .DS_Store
+
+huggingface_cache/
