@@ -22,7 +22,7 @@ def main():
     
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
-        torch_dtype=torch.bfloat16,
+        dtype=torch.bfloat16,
         device_map="cuda"
     )
     model.eval()
