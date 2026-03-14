@@ -7,3 +7,6 @@ accelerate
 matplotlib
 huggingface_hub
 huggingface_hub[cli]
+pandas
+matplotlib
+seaborn
