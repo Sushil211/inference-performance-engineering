@@ -4,7 +4,8 @@ A hands-on exploration of LLM inference bottlenecks, GPU memory behavior, and sc
 
 This repository contains a series of controlled experiments designed to understand the physical limits of Large Language Model inference and develop strategies to improve throughput, latency stability, and hardware utilization. 
 
-The project focuses on the core engineering question: **Why do LLM inference systems slow down—and how can we design schedulers and memory managers that keep them stable under load?**
+The project focuses on the core engineering question:
+**Why do LLM inference systems slow down and how can we design schedulers and memory managers that keep them stable under load?**
 
 ## Experiment Roadmap
 
