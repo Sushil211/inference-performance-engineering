@@ -11,7 +11,7 @@ The project focuses on the core engineering question: **Why do LLM inference sys
 ### Phase 1 — The Physics of Serving
 Understanding the hardware bottlenecks of LLM inference and standard PyTorch limitations.
 
-* **[Experiment 01: The Batching Cliff & Memory Wall](./experiments/01_batching_cliff/)** * *Status:* Completed
+* **[Experiment 01: The Batching Cliff & Memory Wall](./experiments/01_batching_cliff/)**
   * *Summary:* Profiled Llama 3.1 8B on an RTX 4090 to map the exact transition from compute-bound to memory-bound inference. Proved that contiguous KV Cache allocation wastes ~5GB of VRAM at Batch 128, hitting the High Bandwidth Memory (HBM) wall and causing latency to explode.
 
 ## Engineering Goal
