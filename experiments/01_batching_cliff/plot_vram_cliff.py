@@ -13,14 +13,14 @@ def plot_metrics(csv_path, output_path):
     # --- TOP PLOT: Latency vs Throughput ---
     color1 = 'tab:red'
     ax1.set_ylabel('Latency (ms)', color=color1, fontweight='bold')
-    ax1.plot(df['batch_size'], df['latency_ms'], marker='o', color=color1, linewidth=2, label='Latency')
+    ax1.plot(df['batch_size'].astype(str), df['latency_ms'], marker='o', color=color1, linewidth=2, label='Latency')
     ax1.tick_params(axis='y', labelcolor=color1)
     ax1.grid(True, linestyle='--', alpha=0.6)
 
     ax2 = ax1.twinx()  # Instantiate a second axes that shares the same x-axis
     color2 = 'tab:blue'
     ax2.set_ylabel('Throughput (tok/s)', color=color2, fontweight='bold')
-    ax2.plot(df['batch_size'], df['throughput_tok_sec'], marker='s', color=color2, linewidth=2, label='Throughput')
+    ax2.plot(df['batch_size'].astype(str), df['throughput_tok_sec'], marker='s', color=color2, linewidth=2, label='Throughput')
     ax2.tick_params(axis='y', labelcolor=color2)
     
     ax1.set_title("Compute vs Memory Bound Transition")
