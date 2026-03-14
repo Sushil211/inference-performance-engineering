@@ -38,7 +38,7 @@ def main():
 
     print("\n📊 Starting Batching Benchmark...")
     print("-" * 60)
-    print(f"{'Batch Size':<12} | {'Latency (ms)':<15} | {'Throughput (tok/s)':<20}")
+    print(f"{'Batch Size':<12} | {'Latency (ms)':<15} | {'Throughput (tok/s)':<20} | {'Peak VRAM (GB)':<15}")
     print("-" * 60)
 
     # Generate a dummy prompt of exact length
@@ -49,6 +49,9 @@ def main():
 
     with torch.no_grad():
         for batch_size in BATCH_SIZES:
+            # 1. Reset the VRAM tracker for this specific batch size
+            torch.cuda.reset_peak_memory_stats()
+            
             batch_input_ids = input_ids.expand(batch_size, -1)
             batch_attention_mask = attention_mask.expand(batch_size, -1)
             
@@ -79,6 +82,9 @@ def main():
             torch.cuda.synchronize() # Wait for all measurements to finish
             end_time = time.perf_counter()
             
+            # 2. Capture the Peak VRAM Reserved by PyTorch
+            peak_vram_gb = torch.cuda.max_memory_reserved() / (1024 ** 3)
+            
             # --- METRICS CALCULATION ---
             total_time_sec = end_time - start_time
             avg_time_per_run_sec = total_time_sec / MEASUREMENT_RUNS
@@ -88,12 +94,18 @@ def main():
             total_generated_tokens = batch_size * OUTPUT_LENGTH
             throughput_tok_per_sec = total_generated_tokens / avg_time_per_run_sec
             
-            print(f"{batch_size:<12} | {avg_time_per_run_ms:<15.2f} | {throughput_tok_per_sec:<20.2f}")
+            # 3. Print and append the new VRAM metric
+            print(f"{batch_size:<12} | {avg_time_per_run_ms:<15.2f} | {throughput_tok_per_sec:<20.2f} | {peak_vram_gb:<15.2f}")
             
-            results.append({"batch_size": batch_size, "latency_ms": round(avg_time_per_run_ms, 2), "throughput_tok_sec": round(throughput_tok_per_sec, 2)})
+            results.append({
+                "batch_size": batch_size, 
+                "latency_ms": round(avg_time_per_run_ms, 2), 
+                "throughput_tok_sec": round(throughput_tok_per_sec, 2),
+                "peak_vram_gb": round(peak_vram_gb, 2)
+            })
 
     with open(args.output_csv, mode='w', newline='') as file:
-        writer = csv.DictWriter(file, fieldnames=["batch_size", "latency_ms", "throughput_tok_sec"])
+        writer = csv.DictWriter(file, fieldnames=["batch_size", "latency_ms", "throughput_tok_sec", "peak_vram_gb"])
         writer.writeheader()
         writer.writerows(results)
         
